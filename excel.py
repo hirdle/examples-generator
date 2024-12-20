@@ -3,6 +3,7 @@ from openpyxl.styles.borders import Border, Side
 from random import randint
 import random
 import subprocess
+import os
 
 
 wbObj = openpyxl.load_workbook('list.xlsx')
@@ -59,6 +60,7 @@ def print_examples_cell(current_wbk, examples, start_row=4, start_column=5, answ
     now_column = start_column
 
     for idx, solve in enumerate(examples):
+        
         for ch in solve:
             current_wbk.cell(row=now_row, column=now_column).value = ch
             now_column += 1
@@ -75,30 +77,34 @@ def print_examples_cell(current_wbk, examples, start_row=4, start_column=5, answ
         now_column = start_column
 
 
-def convert_xlsx_to_pdf(xlsx_file):
+def convert_xlsx_to_pdf(dir, xlsx_file):
     try:
-        subprocess.run(["libreoffice", "--headless", "--convert-to", "pdf", xlsx_file])
-        print("Done!")
+        subprocess.run(["libreoffice", "--headless", "--convert-to", "pdf", xlsx_file, "--outdir", dir],
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     except Exception as e:
         print("Error:", e)
 
 
-m1 = generate_examples(types_action=['+', '-'], only_positive=True)
-m2 = generate_examples(types_action=['+', '-'], only_positive=True)
+def create_examples(dir='', actions=['+', '-', '×', ':'], number_range=[1, 100], only_positive=True):
 
-print_examples_cell(wbk, m1[0], 3, 4)
-print_examples_cell(wbk, m2[0], 3, 17)
+    m1 = generate_examples(types_action=actions, number_range=number_range, only_positive=only_positive)
+    m2 = generate_examples(types_action=actions, number_range=number_range, only_positive=only_positive)
 
-print_examples_cell(wbk_answers, m1[0], 3, 4, m1[1])
-print_examples_cell(wbk_answers, m2[0], 3, 17, m2[1])
+    print_examples_cell(wbk, m1[0], 3, 4)
+    print_examples_cell(wbk, m2[0], 3, 17)
 
+    print_examples_cell(wbk_answers, m1[0], 3, 4, m1[1])
+    print_examples_cell(wbk_answers, m2[0], 3, 17, m2[1])
 
-wbObj.save('examples.xlsx')
-wbObj.close()
+    wbObj.save(f'{dir}examples.xlsx')
+    wbObj.close()
 
-wbObj_answers.save('examples_answers.xlsx')
-wbObj_answers.close()
+    wbObj_answers.save(f'{dir}examples_answers.xlsx')
+    wbObj_answers.close()
 
-convert_xlsx_to_pdf("examples.xlsx")
-convert_xlsx_to_pdf("examples_answers.xlsx")
+    convert_xlsx_to_pdf(dir, f"{dir}examples.xlsx")
+    convert_xlsx_to_pdf(dir, f"{dir}examples_answers.xlsx")
+
+    os.remove(f'{dir}/examples.xlsx')
+    os.remove(f'{dir}/examples_answers.xlsx')
